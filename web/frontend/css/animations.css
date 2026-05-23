@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   animations.css — Keyframes & Micro-animations
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(20px); }
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter { animation: page-in 0.28s var(--ease) forwards; }
+
+.stagger-children > * { animation: page-in 0.32s var(--ease) both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 65ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 130ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 195ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 260ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 325ms; }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+canvas { animation: fade-in 0.4s var(--ease); }
+
+/* Drop zone pulse when dragging */
+@keyframes drop-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.3); }
+  50%       { box-shadow: 0 0 0 8px rgba(0,255,136,0); }
+}
+
+.drop-zone.drag-over { animation: drop-pulse 1s ease-in-out infinite; }
+
+/* Upload bar shimmer */
+@keyframes bar-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.upload-bar-fill.processing {
+  background: linear-gradient(90deg,
+    var(--green) 0%, #00e87a 40%, var(--green) 60%, #00c96e 100%);
+  background-size: 200% 100%;
+  animation: bar-shimmer 1.5s linear infinite;
+}
+
+/* Green glow pulse for active elements */
+@keyframes glow-green {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,255,136,0.2); }
+  50%       { box-shadow: 0 0 20px rgba(0,255,136,0.5); }
+}
+
+.glow-green { animation: glow-green 2.5s ease-in-out infinite; }
+
+/* Slide in from right */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Scale in */
+@keyframes scale-in {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* Ring breathe */
+@keyframes ring-breathe {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; }
+}
+
+/* KPI count-up — handled in JS */
+.kpi-value { will-change: contents; }

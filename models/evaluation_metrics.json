@@ -1,0 +1,38 @@
+{
+  "clv_model_evaluation": {
+    "bgnbd_log_likelihood": 1.4646840277081834,
+    "gamma_gamma_log_likelihood": -8.604510841284053,
+    "test_holdout_days": 74,
+    "purchases_mae": 0.8348567407804764,
+    "purchases_rmse": 1.3540814964426442,
+    "revenue_mae": 606.3596956362463,
+    "revenue_rmse": 3440.1779599588845
+  },
+  "clustering_evaluation": {
+    "silhouette_score": 0.9728138819303664,
+    "davies_bouldin_index": 0.019340482128055444,
+    "calinski_harabasz_index": 1691.442136908413
+  },
+  "segment_profiles": {
+    "High Value Customers": {
+      "customer_count": 1,
+      "average_recency": 1.0,
+      "average_frequency": 2.0,
+      "average_monetary": 84236.25,
+      "average_tenure": 206.0,
+      "average_clv": 45663.73791816772,
+      "average_churn_probability": 2.3717294794778354e-10,
+      "total_revenue": 168472.5
+    },
+    "Low Value / Lost": {
+      "customer_count": 4337,
+      "average_recency": 92.55752824533087,
+      "average_frequency": 3.864652985934978,
+      "average_monetary": 399.8402383182773,
+      "average_tenure": 223.31219737145491,
+      "average_clv": 78.53460749727994,
+      "average_churn_probability": 1.394166165446133e-10,
+      "total_revenue": 29065369330.82112
+    }
+  }
+}
