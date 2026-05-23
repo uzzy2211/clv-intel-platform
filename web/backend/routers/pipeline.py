@@ -7,9 +7,9 @@ Provides endpoints to trigger ML pipeline re-runs and check pipeline status.
 from __future__ import annotations
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from web.backend.schemas import PipelineRunResponse, PipelineStatusResponse
-from web.backend.services.data_service import get_data_service
-from web.backend.services.ml_service import run_full_pipeline
+from schemas import PipelineRunResponse, PipelineStatusResponse
+from services.data_service import get_data_service
+from services.ml_service import run_full_pipeline
 
 router = APIRouter(prefix="/api/pipeline", tags=["pipeline"])
 

@@ -7,15 +7,27 @@ Provides KPI summary and segment share data for the Overview page.
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
-from web.backend.schemas import OverviewKPIs, OverviewResponse, SegmentShare
-from web.backend.services.data_service import get_data_service
+from schemas import OverviewKPIs, OverviewResponse, SegmentShare
+from services.data_service import get_data_service
 
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Resolve project root dynamically so src/ imports work
+_curr = os.path.dirname(os.path.abspath(__file__))
+while True:
+    if os.path.exists(os.path.join(_curr, "config.yaml")):
+        ROOT = _curr
+        break
+    _parent = os.path.dirname(_curr)
+    if _parent == _curr:
+        ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        break
+    _curr = _parent
+
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
 
 from src.config import load_config
 

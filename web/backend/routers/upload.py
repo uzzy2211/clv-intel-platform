@@ -27,11 +27,23 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Request, Up
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+# Resolve project root dynamically so src/ imports work
+_curr = os.path.dirname(os.path.abspath(__file__))
+while True:
+    if os.path.exists(os.path.join(_curr, "config.yaml")):
+        ROOT = _curr
+        break
+    _parent = os.path.dirname(_curr)
+    if _parent == _curr:
+        ROOT = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        )
+        break
+    _curr = _parent
+
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +133,7 @@ def _process_file(tmp_path: str, ext: str, original_name: str, state: dict) -> N
         state["message"]  = "Dataset saved. Running ML pipeline..."
 
         # ── 4. Run full ML pipeline ────────────────────────────────
-        from web.backend.services.ml_service import run_full_pipeline
+        from services.ml_service import run_full_pipeline
         success, message, duration = run_full_pipeline()
 
         if not success:
@@ -131,7 +143,7 @@ def _process_file(tmp_path: str, ext: str, original_name: str, state: dict) -> N
         state["message"]  = "Pipeline complete. Reloading data service..."
 
         # ── 5. Reload data service ─────────────────────────────────
-        from web.backend.services.data_service import get_data_service
+        from services.data_service import get_data_service
         get_data_service().reload()
 
         # ── 6. Refresh alive matrix cache ──────────────────────────
@@ -163,8 +175,8 @@ def _process_file(tmp_path: str, ext: str, original_name: str, state: dict) -> N
 def _refresh_alive_matrix() -> None:
     """Recompute alive matrix cache — avoids circular import via module reference."""
     try:
-        from web.backend.services.ml_service import compute_alive_matrix
-        import web.backend.main as _main
+        from services.ml_service import compute_alive_matrix
+        import main as _main
         new_cache = compute_alive_matrix()
         _main._alive_matrix_cache.clear()
         _main._alive_matrix_cache.update(new_cache)

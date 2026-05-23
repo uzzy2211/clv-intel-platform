@@ -11,8 +11,8 @@ import os
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
-from web.backend.services.data_service import get_data_service
-from web.backend.services.report_service import generate_pdf_report
+from services.data_service import get_data_service
+from services.report_service import generate_pdf_report
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 

@@ -10,8 +10,8 @@ import math
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from web.backend.schemas import CustomerDetail, CustomerRow, CustomersResponse
-from web.backend.services.data_service import get_data_service
+from schemas import CustomerDetail, CustomerRow, CustomersResponse
+from services.data_service import get_data_service
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
 

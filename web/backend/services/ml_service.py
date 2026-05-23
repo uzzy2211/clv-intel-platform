@@ -16,9 +16,21 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Resolve project root dynamically so src/ imports work
+_curr = os.path.dirname(os.path.abspath(__file__))
+while True:
+    if os.path.exists(os.path.join(_curr, "config.yaml")):
+        ROOT = _curr
+        break
+    _parent = os.path.dirname(_curr)
+    if _parent == _curr:
+        ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        break
+    _curr = _parent
+
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
 
 logger = logging.getLogger(__name__)
 

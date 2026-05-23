@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 from fastapi import APIRouter, HTTPException
-from web.backend.schemas import (
+from schemas import (
     AliveMatrixResponse,
     CLVBin,
     CLVDistributionResponse,
@@ -19,14 +19,14 @@ from web.backend.schemas import (
     PCAPoint,
     PCAResponse,
 )
-from web.backend.services.data_service import get_data_service
-from web.backend.services.ml_service import compute_alive_matrix, compute_clv_distribution
+from services.data_service import get_data_service
+from services.ml_service import compute_alive_matrix, compute_clv_distribution
 
 
 def _get_matrix_cache() -> dict:
     """Lazy import to avoid circular dependency with main.py."""
     try:
-        from web.backend.main import get_alive_matrix_cache
+        from main import get_alive_matrix_cache
         return get_alive_matrix_cache()
     except Exception:
         return {}

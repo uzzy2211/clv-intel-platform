@@ -145,8 +145,16 @@ def load_config(config_path: str = "config.yaml") -> Config:
         >>> cfg.model.bgn_penalizer
         0.001
     """
+    if not os.path.isabs(config_path):
+        # Resolve relative to the repository root (2 levels up from this file)
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        resolved_path = os.path.join(repo_root, config_path)
+        if os.path.exists(resolved_path):
+            config_path = resolved_path
+
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path!r}")
+
 
     with open(config_path, "r", encoding="utf-8") as fh:
         raw: dict = yaml.safe_load(fh)

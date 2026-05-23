@@ -1,8 +1,8 @@
 """
 main.py — FastAPI Application Entry Point
 
-Initializes the FastAPI app, registers all routers, serves the static
-frontend, and loads the data service on startup.
+Works whether run from the repo root (locally) or from web/backend (Render).
+All imports use package-relative names that resolve correctly in both contexts.
 """
 
 from __future__ import annotations
@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 import os
 import sys
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -18,10 +17,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from web.backend.routers import overview, segments, customers, models, pipeline, export, upload
-from web.backend.services.data_service import get_data_service
-from web.backend.services.ml_service import compute_alive_matrix
-from web.backend.schemas import HealthResponse
+# ---------------------------------------------------------------------------
+# Path bootstrap — must happen BEFORE any project imports
+#
+# __file__ is  .../web/backend/main.py  in both environments.
+# BACKEND_DIR  = .../web/backend
+# WEB_DIR      = .../web
+# REPO_ROOT    = .../ (contains src/, data/, models/, config.yaml)
+#
+# We add REPO_ROOT to sys.path so that `import src.config` works,
+# and we add BACKEND_DIR so that `import routers.overview` works
+# when Render sets the working directory to web/backend.
+# ---------------------------------------------------------------------------
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))          # web/backend
+if os.path.exists(os.path.join(os.path.dirname(BACKEND_DIR), "config.yaml")):
+    REPO_ROOT = os.path.dirname(BACKEND_DIR)
+else:
+    REPO_ROOT = os.path.dirname(os.path.dirname(BACKEND_DIR))         # repo root
+WEB_DIR     = os.path.join(REPO_ROOT, "web")                          # web
+
+
+for _p in (REPO_ROOT, BACKEND_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+# Now safe to import project modules
+from routers import overview, segments, customers, models, pipeline, export, upload
+from services.data_service import get_data_service
+from services.ml_service import compute_alive_matrix
+from schemas import HealthResponse
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,14 +53,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Resolve project root so src/ imports work from any working directory
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
-
 # ── Patch Starlette multipart size limit BEFORE app creation ──────────
-# Default max_part_size is 1 MB — raises 400 for any file larger than that.
-# Patch to 300 MB to support real retail datasets (UCI ~45 MB CSV).
 _MAX_UPLOAD_BYTES = 300 * 1024 * 1024  # 300 MB
 
 try:
@@ -50,13 +67,11 @@ except Exception as _patch_err:
 # Startup / lifespan
 # ---------------------------------------------------------------------------
 
-# Cache for the alive matrix (expensive to compute per-request)
 _alive_matrix_cache: dict = {}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load data and pre-compute expensive artifacts on startup."""
     global _alive_matrix_cache
 
     logger.info("Loading data service...")
@@ -67,7 +82,6 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("Data service not ready — run the ML pipeline first.")
 
-    # Pre-compute alive matrix so the endpoint is instant
     logger.info("Pre-computing BG/NBD alive probability matrix...")
     try:
         _alive_matrix_cache = compute_alive_matrix()
@@ -75,12 +89,11 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning(f"Could not pre-compute alive matrix: {exc}")
 
-    yield  # Server runs here
+    yield
 
     logger.info("Shutting down CLV Intelligence Platform.")
 
 
-# Expose cache for the models router
 def get_alive_matrix_cache() -> dict:
     return _alive_matrix_cache
 
@@ -98,7 +111,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow frontend dev server
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -106,7 +118,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # ---------------------------------------------------------------------------
 # Routers
@@ -120,14 +131,12 @@ app.include_router(pipeline.router)
 app.include_router(export.router)
 app.include_router(upload.router)
 
-
 # ---------------------------------------------------------------------------
 # Health check
 # ---------------------------------------------------------------------------
 
 @app.get("/api/health", response_model=HealthResponse, tags=["health"])
 def health_check() -> HealthResponse:
-    """Return API health status."""
     svc = get_data_service()
     return HealthResponse(
         status="ok",
@@ -135,27 +144,22 @@ def health_check() -> HealthResponse:
         data_loaded=svc.df_segments is not None,
     )
 
-
 # ---------------------------------------------------------------------------
-# Static frontend — serve after all API routes
+# Static frontend
 # ---------------------------------------------------------------------------
 
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+FRONTEND_DIR = os.path.join(WEB_DIR, "frontend")
 
 if os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
     @app.get("/", include_in_schema=False)
     def serve_index() -> FileResponse:
-        """Serve the SPA index.html."""
         return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
     @app.get("/{full_path:path}", include_in_schema=False)
     def serve_spa(full_path: str) -> FileResponse:
-        """Catch-all: serve index.html for client-side routing."""
-        # Never intercept API or static routes
         if full_path.startswith("api/") or full_path.startswith("static/"):
             from fastapi import HTTPException
             raise HTTPException(status_code=404)
-        index = os.path.join(FRONTEND_DIR, "index.html")
-        return FileResponse(index)
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))

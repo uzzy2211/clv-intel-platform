@@ -10,13 +10,13 @@ from __future__ import annotations
 from typing import List
 
 from fastapi import APIRouter, HTTPException
-from web.backend.schemas import (
+from schemas import (
     Recommendation,
     RecommendationsResponse,
     SegmentProfile,
     SegmentsResponse,
 )
-from web.backend.services.data_service import get_data_service
+from services.data_service import get_data_service
 
 router = APIRouter(prefix="/api/segments", tags=["segments"])
 
