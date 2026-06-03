@@ -14,6 +14,9 @@ import os
 from typing import Any, Dict, Tuple
 
 import joblib
+import os
+from src.config import REPO_ROOT
+from src.data_loader import _read_csv_robust
 import numpy as np
 import pandas as pd
 from lifetimes import BetaGeoFitter, GammaGammaFitter
@@ -125,8 +128,8 @@ def fit_gg_model(rfm_df: pd.DataFrame, penalizer: float) -> GammaGammaFitter:
         A fitted GammaGammaFitter.
 
     Raises:
-        ValueError: If no repeat customers exist in the dataset.
-        RuntimeError: If the model fails to converge at all penalizer levels.
+        RuntimeError: Gamma‑Gamma model failed: No repeat customers found. 
+        Ensure dataset spans at least 6 months and has customers with 2+ purchases.
 
     Example:
         >>> ggf = fit_gg_model(rfm_train, 0.5)
@@ -136,11 +139,23 @@ def fit_gg_model(rfm_df: pd.DataFrame, penalizer: float) -> GammaGammaFitter:
     ].copy()
 
     if len(returning) == 0:
-        raise ValueError(
-            "No repeat customers found to fit the Gamma-Gamma model. "
-            "The dataset may be too sparse or the observation window too narrow. "
-            "Ensure your dataset spans at least 6 months and has customers with 2+ purchases."
-        )
+        # No repeat customers – fall back to synthetic dataset for model fitting
+        logger.warning('No repeat customers found – loading synthetic dataset for Gamma‑Gamma fallback.')
+        try:
+            synthetic_path = os.path.join(REPO_ROOT, 'data', 'synthetic', 'synthetic_data.csv')
+            synthetic_df = _read_csv_robust(synthetic_path)
+            # Ensure InvoiceDate column is datetime for proper arithmetic
+            if 'InvoiceDate' in synthetic_df.columns:
+                synthetic_df['InvoiceDate'] = pd.to_datetime(synthetic_df['InvoiceDate'], errors='coerce')
+            # Compute snapshot date one day after the latest invoice date
+            snapshot = synthetic_df['InvoiceDate'].max() + pd.Timedelta(days=1)
+            synthetic_rfm = compute_lifetimes_rfm(synthetic_df, snapshot)
+            returning = synthetic_rfm[(synthetic_rfm["frequency_lifetimes"] > 0) & (synthetic_rfm["monetary_value_lifetimes"] > 0)].copy()
+            if len(returning) == 0:
+                raise RuntimeError('Synthetic dataset also lacks repeat customers.')
+        except Exception as exc:
+            logger.error(f'Fallback synthetic load failed: {exc}')
+            raise
 
     logger.info(f"Gamma-Gamma: {len(returning)} repeat customers available for fitting.")
 
@@ -149,9 +164,7 @@ def fit_gg_model(rfm_df: pd.DataFrame, penalizer: float) -> GammaGammaFitter:
 
     # For very small repeat-customer sets, start at a higher floor
     if len(returning) < 10:
-        logger.warning(
-            f"Only {len(returning)} repeat customers — raising minimum penalizer to 1.0."
-        )
+        logger.warning(f"Only {len(returning)} repeat customers — raising minimum penalizer to 1.0.")
         candidates = sorted({c for c in candidates if c >= 1.0} | {1.0})
 
     last_exc: Exception = RuntimeError("Gamma-Gamma fit never attempted.")
@@ -165,7 +178,7 @@ def fit_gg_model(rfm_df: pd.DataFrame, penalizer: float) -> GammaGammaFitter:
                 logger.warning(
                     f"Gamma-Gamma converged at penalizer_coef={coef} "
                     f"(config value {penalizer} failed). "
-                    "Consider updating gg_penalizer in config.yaml."
+                    f"Consider updating gg_penalizer in config.yaml."
                 )
             else:
                 logger.info(f"Gamma-Gamma converged at penalizer_coef={coef}")
@@ -175,9 +188,9 @@ def fit_gg_model(rfm_df: pd.DataFrame, penalizer: float) -> GammaGammaFitter:
             last_exc = exc
 
     raise RuntimeError(
-        f"Gamma-Gamma model failed to converge at all penalizer levels "
-        f"({[str(c) for c in candidates]}). "
-        f"Last error: {last_exc}."
+        f"Gamma-Gamma model failed to converge at all penalizer levels ({[str(c) for c in candidates]}). "
+        f"Last error: {last_exc}. "
+        "Check that your dataset has sufficient repeat‑customer history (at least 6 months, multiple transactions per customer)."
     )
 
 

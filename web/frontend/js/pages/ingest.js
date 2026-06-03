@@ -185,11 +185,19 @@ function renderDropZone() {
 
 // ── Handle file ────────────────────────────────────────────────────────
 async function handleFile(file) {
+  // ---- Client‑side validation ----
+  if (file.size === 0) {
+    showToast('Cannot upload an empty file.', 'error');
+    return;
+  }
+
   const ext = file.name.split('.').pop().toLowerCase();
   if (!['csv', 'xlsx', 'xls'].includes(ext)) {
     showToast(`Unsupported file type: .${ext}. Use .csv or .xlsx`, 'error');
     return;
   }
+
+  // Optionally, you could inspect the first few lines to ensure there is data beyond the header.
 
   renderProgressUI(file.name, file.size);
 
