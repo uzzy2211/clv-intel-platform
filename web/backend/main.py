@@ -35,6 +35,9 @@ while _curr and _curr != os.path.dirname(_curr):
 if REPO_ROOT is None:
     REPO_ROOT = os.path.dirname(os.path.dirname(BACKEND_DIR))
 
+# Change working directory to repository root so relative paths resolve correctly
+os.chdir(REPO_ROOT)
+
 WEB_DIR = os.path.join(REPO_ROOT, "web")
 
 for _p in (REPO_ROOT, BACKEND_DIR):
