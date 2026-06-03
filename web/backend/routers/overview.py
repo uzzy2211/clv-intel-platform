@@ -10,25 +10,7 @@ from fastapi import APIRouter, HTTPException
 from schemas import OverviewKPIs, OverviewResponse, SegmentShare
 from services.data_service import get_data_service
 
-import os
-import sys
-
-# Resolve project root dynamically so src/ imports work
-_curr = os.path.dirname(os.path.abspath(__file__))
-while True:
-    if os.path.exists(os.path.join(_curr, "config.yaml")):
-        ROOT = _curr
-        break
-    _parent = os.path.dirname(_curr)
-    if _parent == _curr:
-        ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        break
-    _curr = _parent
-
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
-
-
+# Path setup is handled by the application entry points (main.py, run.py, or pytest)
 from src.config import load_config
 
 router = APIRouter(prefix="/api/overview", tags=["overview"])

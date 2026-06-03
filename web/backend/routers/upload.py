@@ -27,22 +27,8 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Request, Up
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-# Resolve project root dynamically so src/ imports work
-_curr = os.path.dirname(os.path.abspath(__file__))
-while True:
-    if os.path.exists(os.path.join(_curr, "config.yaml")):
-        ROOT = _curr
-        break
-    _parent = os.path.dirname(_curr)
-    if _parent == _curr:
-        ROOT = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        )
-        break
-    _curr = _parent
-
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+# Path setup is handled by the application entry points (main.py, run.py, or pytest)
+from src.config import REPO_ROOT
 
 
 logger = logging.getLogger(__name__)
@@ -124,7 +110,7 @@ def _process_file(tmp_path: str, ext: str, original_name: str, state: dict) -> N
         state["message"]  = f"Schema valid ({len(df_raw):,} rows). Saving dataset..."
 
         # ── 3. Save as active dataset ──────────────────────────────
-        dest_path = os.path.join(ROOT, "data", "synthetic", "synthetic_data.csv")
+        dest_path = os.path.join(REPO_ROOT, "data", "synthetic", "synthetic_data.csv")
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
         df_raw.to_csv(dest_path, index=False)
         logger.info(f"Saved {len(df_raw):,} rows → {dest_path}")

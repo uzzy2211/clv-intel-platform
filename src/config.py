@@ -19,6 +19,9 @@ from typing import List, Optional
 
 import yaml
 
+# Resolve the repository root (2 levels up from this file)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # ---------------------------------------------------------------------------
 # Sub-config dataclasses
@@ -146,9 +149,7 @@ def load_config(config_path: str = "config.yaml") -> Config:
         0.001
     """
     if not os.path.isabs(config_path):
-        # Resolve relative to the repository root (2 levels up from this file)
-        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        resolved_path = os.path.join(repo_root, config_path)
+        resolved_path = os.path.join(REPO_ROOT, config_path)
         if os.path.exists(resolved_path):
             config_path = resolved_path
 

@@ -8,22 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
-import sys
-
-# Resolve project root dynamically so src/ imports work
-_curr = os.path.dirname(os.path.abspath(__file__))
-while True:
-    if os.path.exists(os.path.join(_curr, "config.yaml")):
-        ROOT = _curr
-        break
-    _parent = os.path.dirname(_curr)
-    if _parent == _curr:
-        ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        break
-    _curr = _parent
-
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+from src.config import REPO_ROOT
 
 
 logger = logging.getLogger(__name__)
@@ -42,10 +27,10 @@ def generate_pdf_report(output_path: str = DEFAULT_OUTPUT_PATH) -> tuple[bool, s
     """
     try:
         # Import directly by file path to avoid package resolution issues
-        import importlib.util, os as _os
+        import importlib.util
         spec = importlib.util.spec_from_file_location(
             "generate_report",
-            _os.path.join(ROOT, "reports", "generate_report.py"),
+            os.path.join(REPO_ROOT, "reports", "generate_report.py"),
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)

@@ -16,20 +16,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 
-# Resolve project root dynamically so src/ imports work
-_curr = os.path.dirname(os.path.abspath(__file__))
-while True:
-    if os.path.exists(os.path.join(_curr, "config.yaml")):
-        ROOT = _curr
-        break
-    _parent = os.path.dirname(_curr)
-    if _parent == _curr:
-        ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        break
-    _curr = _parent
-
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
+# Path setup is handled by the application entry points (main.py, run.py, or pytest)
 
 
 logger = logging.getLogger(__name__)

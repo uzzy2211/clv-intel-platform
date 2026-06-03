@@ -19,23 +19,23 @@ from fastapi.staticfiles import StaticFiles
 
 # ---------------------------------------------------------------------------
 # Path bootstrap — must happen BEFORE any project imports
-#
-# __file__ is  .../web/backend/main.py  in both environments.
-# BACKEND_DIR  = .../web/backend
-# WEB_DIR      = .../web
-# REPO_ROOT    = .../ (contains src/, data/, models/, config.yaml)
-#
-# We add REPO_ROOT to sys.path so that `import src.config` works,
-# and we add BACKEND_DIR so that `import routers.overview` works
-# when Render sets the working directory to web/backend.
 # ---------------------------------------------------------------------------
-BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))          # web/backend
-if os.path.exists(os.path.join(os.path.dirname(BACKEND_DIR), "config.yaml")):
-    REPO_ROOT = os.path.dirname(BACKEND_DIR)
-else:
-    REPO_ROOT = os.path.dirname(os.path.dirname(BACKEND_DIR))         # repo root
-WEB_DIR     = os.path.join(REPO_ROOT, "web")                          # web
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Traverse upward to find the directory containing config.yaml (repo root)
+_curr = BACKEND_DIR
+REPO_ROOT = None
+while _curr and _curr != os.path.dirname(_curr):
+    if os.path.exists(os.path.join(_curr, "config.yaml")):
+        REPO_ROOT = _curr
+        break
+    _curr = os.path.dirname(_curr)
+
+# Fallback: assume repo root is two levels up from web/backend/main.py
+if REPO_ROOT is None:
+    REPO_ROOT = os.path.dirname(os.path.dirname(BACKEND_DIR))
+
+WEB_DIR = os.path.join(REPO_ROOT, "web")
 
 for _p in (REPO_ROOT, BACKEND_DIR):
     if _p not in sys.path:
