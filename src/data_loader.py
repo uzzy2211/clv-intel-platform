@@ -113,6 +113,7 @@ def validate_schema(df: pd.DataFrame) -> None:
 
     Raises:
         ValueError: If required columns are still missing after normalisation.
+        TypeError: If key numeric columns contain non-numeric data types.
     """
     missing = REQUIRED_COLS - set(df.columns)
     if missing:
@@ -121,6 +122,13 @@ def validate_schema(df: pd.DataFrame) -> None:
             f"Found columns: {sorted(df.columns.tolist())}. "
             f"Accepted aliases: {sorted(_COLUMN_ALIASES.keys())}"
         )
+
+    if "Quantity" in df.columns:
+        if not pd.api.types.is_numeric_dtype(df["Quantity"]):
+            raise TypeError("Quantity column must contain numeric values.")
+    if "UnitPrice" in df.columns:
+        if not pd.api.types.is_numeric_dtype(df["UnitPrice"]):
+            raise TypeError("UnitPrice column must contain numeric values.")
 
 
 def _read_csv_robust(path: str) -> pd.DataFrame:
@@ -390,7 +398,8 @@ def filter_by_observation_window(df: pd.DataFrame, config: Config) -> pd.DataFra
     # Safety: if too few unique customers remain, expand to full dataset
     min_customers = 50
     unique_customers = result["CustomerID"].nunique()
-    if unique_customers < min_customers:
+    total_unique_customers = df_filtered["CustomerID"].nunique()
+    if unique_customers < min_customers and total_unique_customers >= min_customers:
         logger.warning(
             f"Only {unique_customers} customers in observation window "
             f"(minimum {min_customers}). Using full dataset instead."

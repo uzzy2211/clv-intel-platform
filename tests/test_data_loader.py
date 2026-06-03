@@ -70,7 +70,7 @@ def test_validate_schema_success(sample_transaction_df: pd.DataFrame):
 def test_validate_schema_missing_columns(sample_transaction_df: pd.DataFrame):
     """Test that missing required columns raise a ValueError."""
     invalid_df = sample_transaction_df.drop(columns=["InvoiceNo", "CustomerID"])
-    with pytest.raises(ValueError, match="Required columns missing"):
+    with pytest.raises(ValueError, match="Missing required columns"):
         validate_schema(invalid_df)
 
 

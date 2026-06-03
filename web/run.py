@@ -38,13 +38,13 @@ def main() -> None:
         sys.exit(1)
 
     print(f"""
-╔══════════════════════════════════════════════════════╗
-║         CLV Intelligence Platform  v1.0.0            ║
-║  BG/NBD + Gamma-Gamma + K-Means Segmentation         ║
-╠══════════════════════════════════════════════════════╣
-║  URL:  http://localhost:{args.port:<28}║
-║  API:  http://localhost:{args.port}/api/docs{' ' * 19}║
-╚══════════════════════════════════════════════════════╝
++------------------------------------------------------+
+|         CLV Intelligence Platform  v1.0.0            |
+|  BG/NBD + Gamma-Gamma + K-Means Segmentation         |
++------------------------------------------------------+
+|  URL:  http://localhost:{args.port:<28}|
+|  API:  http://localhost:{args.port}/api/docs{' ' * 19}|
++------------------------------------------------------+
     """)
 
     uvicorn.run(

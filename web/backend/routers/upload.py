@@ -176,11 +176,15 @@ def _refresh_alive_matrix() -> None:
     """Recompute alive matrix cache — avoids circular import via module reference."""
     try:
         from services.ml_service import compute_alive_matrix
-        import main as _main
+        import sys
         new_cache = compute_alive_matrix()
-        _main._alive_matrix_cache.clear()
-        _main._alive_matrix_cache.update(new_cache)
-        logger.info("Alive matrix cache refreshed.")
+        _main = sys.modules.get("web.backend.main") or sys.modules.get("main") or sys.modules.get("__main__")
+        if _main is not None and hasattr(_main, "_alive_matrix_cache"):
+            _main._alive_matrix_cache.clear()
+            _main._alive_matrix_cache.update(new_cache)
+            logger.info("Alive matrix cache refreshed.")
+        else:
+            logger.warning("Could not find active main module in sys.modules to refresh cache.")
     except Exception as exc:
         logger.warning(f"Could not refresh alive matrix: {exc}")
 
