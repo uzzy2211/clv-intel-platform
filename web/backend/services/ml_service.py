@@ -15,6 +15,7 @@ import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
+import pandas as pd
 
 # Path setup is handled by the application entry points (main.py, run.py, or pytest)
 
@@ -126,3 +127,48 @@ def compute_clv_distribution(df_segments, n_bins: int = 40) -> List[Dict[str, An
         }
         for i in range(len(counts))
     ]
+
+def compute_churn_risk(df_transactions) -> pd.DataFrame:
+    """Compute churn risk flags for customers.
+
+    A customer is flagged as 'High Risk' if:
+    - Days since last purchase > 90 days, OR
+    - Purchase frequency is <= 50% of the overall average frequency.
+
+    The function expects a DataFrame with at least:
+    - 'customer_id' (or similar identifier)
+    - 'date' column (datetime) indicating each transaction date.
+
+    Returns the original DataFrame with an added column 'churn_risk' containing
+    either 'High Risk' or 'Low Risk'.
+    """
+    import pandas as pd
+    from datetime import datetime
+
+    if df_transactions is None or df_transactions.empty:
+        return pd.DataFrame()
+
+    # Ensure date column is datetime
+    if not pd.api.types.is_datetime64_any_dtype(df_transactions['date']):
+        df_transactions = df_transactions.copy()
+        df_transactions['date'] = pd.to_datetime(df_transactions['date'], errors='coerce')
+
+    # Days since last purchase per customer
+    last_purchase = df_transactions.groupby('customer_id')['date'].max().reset_index()
+    last_purchase['days_since'] = (datetime.utcnow() - last_purchase['date']).dt.days
+
+    # Purchase frequency per customer (total transactions)
+    freq = df_transactions.groupby('customer_id').size().reset_index(name='freq')
+    avg_freq = freq['freq'].mean()
+
+    # Merge flags
+    flags = pd.merge(last_purchase, freq, on='customer_id')
+    flags['churn_risk'] = flags.apply(
+        lambda row: 'High Risk' if (row['days_since'] > 90 or row['freq'] <= 0.5 * avg_freq) else 'Low Risk',
+        axis=1,
+    )
+
+    # Merge back to original dataframe (one row per customer)
+    result = pd.merge(df_transactions, flags[['customer_id', 'churn_risk']].drop_duplicates(), on='customer_id', how='left')
+    return result
+

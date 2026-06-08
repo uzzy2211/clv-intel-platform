@@ -191,13 +191,18 @@ async function handleFile(file) {
     return;
   }
 
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (!['csv', 'xlsx', 'xls'].includes(ext)) {
-    showToast(`Unsupported file type: .${ext}. Use .csv or .xlsx`, 'error');
+  // ---- Validation ----
+  const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+  if (file.size > MAX_SIZE) {
+    showToast('File too large – must be under 5 MB.', 'error');
     return;
   }
 
-  // Optionally, you could inspect the first few lines to ensure there is data beyond the header.
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'csv') {
+    showToast('Unsupported file type – only CSV files are allowed.', 'error');
+    return;
+  }
 
   renderProgressUI(file.name, file.size);
 
@@ -205,8 +210,34 @@ async function handleFile(file) {
   const formData = new FormData();
   formData.append('file', file);
 
+  // ---- Upload with progress ----
+  const uploadWithProgress = (formData) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${BASE}/api/upload/file`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          const bar = document.getElementById('upload-bar');
+          const pctEl = document.getElementById('upload-pct');
+          if (bar) bar.style.width = `${pct}%`;
+          if (pctEl) pctEl.textContent = `${pct}%`;
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error(xhr.responseText || `HTTP ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send(formData);
+    });
+  };
+
   try {
-    await api.uploadFile(formData);
+    await uploadWithProgress(formData);
     startPolling();
   } catch (err) {
     showToast(`Upload failed: ${err.message}`, 'error');
