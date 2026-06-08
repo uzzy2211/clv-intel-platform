@@ -6,7 +6,7 @@
  * unlocks the dashboard and navigates to Overview.
  */
 
-import { api } from '../api.js';
+import { api, BASE } from '../api.js';
 import { showToast } from '../components/toast.js';
 
 const PIPELINE_STEPS = [
