@@ -2,7 +2,7 @@
  * api.js — Fetch wrapper for the CLV Intelligence backend API
  */
 
-const BASE = '';  // Same origin — FastAPI serves both
+const BASE = 'https://clv-intel-platform.onrender.com';  // Updated to live Render URL
 
 /**
  * Core fetch wrapper for JSON endpoints.
