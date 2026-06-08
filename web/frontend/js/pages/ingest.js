@@ -201,6 +201,7 @@ async function handleFile(file) {
 
   renderProgressUI(file.name, file.size);
 
+  console.log('Uploading file to /api/upload/file');
   const formData = new FormData();
   formData.append('file', file);
 

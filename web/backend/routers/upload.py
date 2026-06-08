@@ -192,9 +192,11 @@ def _refresh_alive_matrix() -> None:
 
 @router.post("/file", response_model=UploadStatusResponse)
 async def upload_file(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ) -> UploadStatusResponse:
+    logger.info(f"Received upload request: {request.url.path}")
     """
     Accept a CSV or XLSX transaction file and trigger the ML pipeline.
 
