@@ -46,7 +46,7 @@ _upload_state: dict = {
 }
 
 ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
-MAX_FILE_SIZE_BYTES = 300 * 1024 * 1024   # 300 MB hard cap
+MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024   # 50 MB hard cap
 CHUNK_SIZE          = 256 * 1024          # 256 KB streaming chunks
 
 

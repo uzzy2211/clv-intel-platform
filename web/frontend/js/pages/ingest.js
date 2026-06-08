@@ -192,9 +192,9 @@ async function handleFile(file) {
   }
 
   // ---- Validation ----
-  const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
   if (file.size > MAX_SIZE) {
-    showToast('File too large – must be under 5 MB.', 'error');
+    showToast('File too large – must be under 50 MB.', 'error');
     return;
   }
 

@@ -57,7 +57,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ── Patch Starlette multipart size limit BEFORE app creation ──────────
-_MAX_UPLOAD_BYTES = 300 * 1024 * 1024  # 300 MB
+_MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 
 try:
     from starlette.formparsers import MultiPartParser
